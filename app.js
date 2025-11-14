@@ -1,15 +1,8 @@
-// ------------------------ State ------------------------
 let currentPage = 'catalog';
 let selectedCategory = 'Все категории';
 let searchQuery = '';
 
 const categories = ['Все категории', 'Электроника', 'Офисная техника', 'Инструменты', 'Материалы'];
-
-let requests = [
-  { id: "1", title: "Поставка ноутбуков Dell", description: "Необходимо поставить 15 ноутбуков Dell Latitude для нового офиса", status: "in_progress", date: "2025-01-15", priority: "high" },
-  { id: "2", title: "Ремонт принтера HP", description: "Принтер HP LaserJet не печатает, требуется диагностика", status: "new", date: "2025-01-10", priority: "medium" },
-  { id: "3", title: "Установка ПО на рабочие места", description: "Установить Microsoft Office на 10 рабочих мест", status: "completed", date: "2025-01-05", priority: "low" }
-];
 
 const faqData = [
   { id: "1", question: "Как оформить заказ в каталоге товаров?", answer: "Для оформления заказа выберите нужные товары..." },
@@ -67,7 +60,7 @@ async function fetchProducts() {
   if (selectedCategory && selectedCategory !== 'Все категории') params.set('category', selectedCategory);
   if (searchQuery) params.set('search', searchQuery);
 
-const res = await fetch('/Procure_Flow/api/products.php?' + params.toString());
+  const res = await fetch('/Procure_Flow/api/products.php?' + params.toString());
   const data = await res.json();
   renderProducts(data.items || []);
   document.getElementById('products-count').textContent = data.count || 0;
@@ -120,10 +113,11 @@ function renderProducts(products) {
   `).join('');
 }
 
-function escapeHtml(str) {
-  return String(str || '').replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
-
 // ------------------------ Add Product ------------------------
 async function addProduct(formEl) {
   const formData = new FormData(formEl);
@@ -133,173 +127,108 @@ async function addProduct(formEl) {
   await fetchProducts();
 }
 
-// ------------------------ Requests ------------------------
-function renderRequests() {
-  const container = document.getElementById('requests-list');
-  const statusColors = { new: "bg-blue-500", in_progress: "bg-yellow-500", completed: "bg-green-500", cancelled: "bg-red-500" };
-  const statusLabels = { new: "Новая", in_progress: "В работе", completed: "Завершена", cancelled: "Отменена" };
+// ------------------------ Orders ------------------------
+let orders = [];
 
-  container.innerHTML = requests.map(request => `
-    <div class="bg-white border border-gray-200 rounded-lg border-l-4 ${request.priority === 'high' ? 'border-l-red-500' : request.priority === 'medium' ? 'border-l-yellow-500' : 'border-l-green-500'}">
-      <div class="p-6 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold">${escapeHtml(request.title)}</h3>
-          <div class="flex items-center gap-2">
-            <span class="${statusColors[request.status]} text-white text-xs px-2 py-1 rounded-full">${statusLabels[request.status]}</span>
-            <div class="flex items-center gap-1 text-sm text-gray-500">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              ${request.date}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="p-6">
-        <p class="text-gray-500 mb-4">${escapeHtml(request.description)}</p>
-        <div class="flex gap-2">
-          <button class="px-3 py-1 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 flex items-center gap-1">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-            </svg>
-            Подробнее
-          </button>
-          <button class="px-3 py-1 border border-gray-300 text-gray-700 text-sm rounded hover:bg-gray-50 flex items-center gap-1">
-            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-            </svg>
-            Комментарии
-          </button>
-        </div>
-      </div>
-    </div>
-  `).join('');
+async function addOrderToDB(title, description, priority, comment = '', count_goods = 0, id_creator = 0) {
+  const formData = new FormData();
+  formData.append('title', title);
+  formData.append('description', description);
+  formData.append('priority', priority);
+  formData.append('comment', comment);
+  formData.append('count_goods', count_goods);
+  formData.append('id_creator', id_creator);
 
-  // Counters
-  document.getElementById('requests-total').textContent = requests.length;
-  document.getElementById('requests-new').textContent = requests.filter(r => r.status === 'new').length;
-  document.getElementById('requests-progress').textContent = requests.filter(r => r.status === 'in_progress').length;
-  document.getElementById('requests-completed').textContent = requests.filter(r => r.status === 'completed').length;
+  const res = await fetch('../api/add_order.php', {
+    method: 'POST',
+    body: formData
+  });
+
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    if (data.success) {
+      document.getElementById('create-order-modal').classList.add('hidden');
+      await fetchOrders();
+    } else {
+      alert(data.error || 'Ошибка при создании заказа');
+    }
+  } catch (e) {
+    alert('Ошибка: сервер вернул невалидный JSON');
+    console.error('Ответ сервера:', text);
+  }
 }
 
-function addRequest(title, description, priority) {
-  const newRequest = {
-    id: Date.now().toString(),
-    title, description,
-    status: "new",
-    date: new Date().toISOString().split('T')[0],
-    priority
-  };
-  requests.unshift(newRequest);
-  renderRequests();
+async function fetchOrders() {
+  const res = await fetch('../api/get_order.php');
+  const text = await res.text();
+  try {
+    const data = JSON.parse(text);
+    const items = Array.isArray(data) ? data : (data.items || []);
+    renderOrders(items); // передаём массив
+  } catch (e) {
+    console.error('Невалидный JSON:', text);
+    alert('Ошибка: сервер вернул невалидный JSON');
+  }
 }
 
-// ------------------------ FAQ ------------------------
-function renderFAQ(faqToRender = faqData) {
-  const container = document.getElementById('faq-list');
-  container.innerHTML = faqToRender.map(item => `
-    <div class="border border-gray-200 rounded-lg">
-      <button class="faq-trigger w-full text-left p-4 hover:bg-gray-50 flex items-center justify-between" data-faq="${item.id}">
-        <span class="font-medium">${escapeHtml(item.question)}</span>
-        <svg class="h-4 w-4 transform transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-      </button>
-      <div class="faq-content hidden px-4 pb-4 text-gray-500">
-        ${escapeHtml(item.answer)}
-      </div>
-    </div>
-  `).join('');
-}
-
-function filterFAQ() {
-  const q = document.getElementById('faq-search').value.toLowerCase();
-  if (!q) return renderFAQ();
-  const filtered = faqData.filter(item =>
-    item.question.toLowerCase().includes(q) || item.answer.toLowerCase().includes(q)
-  );
-  renderFAQ(filtered);
-}
-
-// ------------------------ Reports ------------------------
-function renderRecentOrders() {
-  const container = document.getElementById('recent-orders');
-  const statusColors = { completed: "bg-green-500", processing: "bg-yellow-500", pending: "bg-blue-500", cancelled: "bg-red-500" };
-  const statusLabels = { completed: "Выполнен", processing: "В обработке", pending: "Ожидает", cancelled: "Отменен" };
-
-  container.innerHTML = recentOrders.map(order => `
-    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-      <div>
-        <div class="font-medium">${order.id}</div>
-        <div class="text-sm text-gray-500">${order.client}</div>
-      </div>
-      <div class="text-right">
-        <div class="font-medium">${order.amount}</div>
-        <div class="flex items-center gap-2">
-          <span class="${statusColors[order.status]} text-white text-xs px-2 py-1 rounded-full">${statusLabels[order.status]}</span>
-          <span class="text-xs text-gray-500">${order.date}</span>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-// ------------------------ Charts (simple canvas) ------------------------
-function createSimpleChart(canvasId, data, type = 'line') {
-  const canvas = document.getElementById(canvasId);
-  const ctx = canvas.getContext('2d');
-  const width = canvas.width, height = canvas.height;
-
-  ctx.clearRect(0, 0, width, height);
-  ctx.strokeStyle = '#22c55e'; ctx.fillStyle = '#22c55e'; ctx.lineWidth = 2;
-
-  const padding = 40;
-  const chartWidth = width - padding * 2;
-  const chartHeight = height - padding * 2;
-  const maxValue = Math.max(...data.map(d => d.value));
-  const stepX = chartWidth / (data.length - 1);
-
-  // Axes
-  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(padding, padding); ctx.lineTo(padding, height - padding); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(padding, height - padding); ctx.lineTo(width - padding, height - padding); ctx.stroke();
-
-  // Data
-  ctx.strokeStyle = '#22c55e'; ctx.fillStyle = '#22c55e'; ctx.lineWidth = 2;
-  if (type === 'line') {
-    ctx.beginPath();
-    data.forEach((point, i) => {
-      const x = padding + i * stepX;
-      const y = height - padding - (point.value / maxValue) * chartHeight;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    data.forEach((point, i) => {
-      const x = padding + i * stepX;
-      const y = height - padding - (point.value / maxValue) * chartHeight;
-      ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
-    });
-  } else {
-    const barWidth = stepX * 0.6;
-    data.forEach((point, i) => {
-      const x = padding + i * stepX - barWidth / 2;
-      const barHeight = (point.value / maxValue) * chartHeight;
-      const y = height - padding - barHeight;
-      ctx.fillRect(x, y, barWidth, barHeight);
-    });
+function renderOrders(items) {
+  const container = document.getElementById('orders-list');
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="text-gray-500">Заказов пока нет</p>';
+    return;
   }
 
-  ctx.fillStyle = '#6b7280'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-  data.forEach((point, i) => {
-    const x = padding + i * stepX;
-    ctx.fillText(point.label, x, height - 10);
+  const priorityLabels = {1: "Низкий", 2: "Средний", 3: "Высокий"};
+  const statusLabels = {0: "Новый", 1: "В работе", 2: "Завершён", 3: "Отменён"};
+
+  container.innerHTML = items.map(order => {
+    const formattedDate = formatUnixDate(order.date);
+    return `
+      <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 hover:shadow-md transition-shadow duration-200">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-semibold text-gray-800">${escapeHtml(order.title)}</h3>
+          <span class="text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}">
+            ${statusLabels[order.status] || '—'}
+          </span>
+        </div>
+        <p class="text-sm text-gray-600 mb-1">${escapeHtml(order.description)}</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-gray-500 mt-2">
+          <div>Приоритет: <span class="font-medium">${priorityLabels[order.priority] || '—'}</span></div>
+          <div>Комментарий: <span class="font-medium">${escapeHtml(order.comment || '—')}</span></div>
+          <div>Количество: <span class="font-medium">${order.count_goods || '—'} шт</span></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Создан: ${formattedDate} | ID: ${order.id}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+function formatUnixDate(unix) {
+  const date = new Date(unix * 1000);
+  return date.toLocaleDateString('ru-RU', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
   });
 }
 
+function getStatusColor(status) {
+  switch (status) {
+    case 0: return 'bg-blue-100 text-blue-700';
+    case 1: return 'bg-yellow-100 text-yellow-700';
+    case 2: return 'bg-green-100 text-green-700';
+    case 3: return 'bg-red-100 text-red-700';
+    default: return 'bg-gray-100 text-gray-600';
+  }
+}
+
+
 // ------------------------ Events ------------------------
 document.addEventListener('DOMContentLoaded', () => {
-  // Nav
+  // Навигация
   document.querySelectorAll('.nav-item').forEach(item => {
     item.addEventListener('click', function() {
       const page = this.dataset.page; showPage(page); closeSidebar();
@@ -309,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sidebar-close').addEventListener('click', closeSidebar);
   document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
 
-  // Catalog
+  // Каталог
   renderCategoriesBar();
   document.getElementById('search-input').addEventListener('input', e => {
     searchQuery = e.target.value.trim().toLowerCase();
@@ -317,36 +246,44 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   fetchProducts();
 
-  // Add product
+  // Добавление товара
   document.getElementById('addForm').addEventListener('submit', async e => {
     e.preventDefault();
     await addProduct(e.target);
     e.target.reset();
   });
 
-  // Requests
-  renderRequests();
-  document.getElementById('create-request-btn').addEventListener('click', () => {
-    document.getElementById('create-request-modal').classList.add('active');
+  // Заказы
+  fetchOrders();
+
+  // Открытие модалки заказа
+  document.getElementById('create-order-btn').addEventListener('click', () => {
+    document.getElementById('create-order-modal').classList.remove('hidden');
   });
+
+  // Закрытие модалки
   document.getElementById('close-modal-btn').addEventListener('click', () => {
-    document.getElementById('create-request-modal').classList.remove('active');
+    document.getElementById('create-order-modal').classList.add('hidden');
   });
-  document.getElementById('cancel-request-btn').addEventListener('click', () => {
-    document.getElementById('create-request-modal').classList.remove('active');
+  document.getElementById('cancel-order-btn').addEventListener('click', () => {
+    document.getElementById('create-order-modal').classList.add('hidden');
   });
-  document.getElementById('submit-request-btn').addEventListener('click', () => {
-    const title = document.getElementById('request-title').value;
-    const description = document.getElementById('request-description').value;
-    const priority = document.getElementById('request-priority').value;
-    if (title && description) {
-      addRequest(title, description, priority);
-      document.getElementById('request-title').value = '';
-      document.getElementById('request-description').value = '';
-      document.getElementById('request-priority').value = 'medium';
-      document.getElementById('create-request-modal').classList.remove('active');
-    }
-  });
+
+  // Отправка заказа
+ document.getElementById('submit-order-btn').addEventListener('click', () => {
+  const title = document.getElementById('order-title').value;
+  const description = document.getElementById('order-description').value;
+  const priority = document.getElementById('order-priority').value;
+  const comment = document.getElementById('order-comment').value;
+  const count = document.getElementById('order-count').value;
+
+  if (title && description && count) {
+    addOrderToDB(title, description, priority, comment, count);
+  } else {
+    alert('Заполните все поля');
+  }
+});
+
 
   // FAQ
   renderFAQ();
@@ -364,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Reports
+  // Отчёты
   renderRecentOrders();
   setTimeout(() => {
     const ordersData = [
@@ -408,13 +345,60 @@ document.getElementById('auth-form').addEventListener('submit', async e => {
   e.preventDefault();
   const formData = new FormData(e.target);
   const url = isRegistering ? '../api/register.php' : '../api/login.php';
-
   const res = await fetch(url, { method: 'POST', body: formData });
   const data = await res.json();
   document.getElementById('auth-result').textContent = data.message || data.error || '';
-
-  if (data.success) {
+  if (data.success && data.user) {
+    localStorage.setItem('role', data.role);
+    localStorage.setItem('user', JSON.stringify(data.user));
     document.getElementById('auth-modal').classList.remove('active');
-    // Можно сохранить user info в localStorage или показать приветствие
+    applyRoleUI(data.role);
+    document.getElementById('profile-login').textContent = data.user.login;
+    document.getElementById('profile-email').textContent = data.user.email;
   }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const savedUser = localStorage.getItem('user');
+  if (savedUser) {
+    const user = JSON.parse(savedUser);
+    document.getElementById('profile-login').textContent = user.login;
+    document.getElementById('profile-email').textContent = user.email;
+  }
+  const savedRole = localStorage.getItem('role');
+  if (savedRole) applyRoleUI(savedRole);
+});
+
+function applyRoleUI(role) {
+  const addTab = document.getElementById('nav-add');
+  const reportsTab = document.getElementById('nav-reports');
+  if (role === 'worker') {
+    addTab.style.display = '';
+    reportsTab.style.display = '';
+  } else {
+    addTab.style.display = 'none';
+    reportsTab.style.display = 'none';
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  fetchOrders(); // загрузка заказов сразу при старте
+});
+
+async function checkLowStock() {
+  try {
+    const res = await fetch('../api/check_stock.php');
+    const data = await res.json();
+    if (Array.isArray(data.items) && data.items.length > 0) {
+      const messages = data.items.map(p => 
+        `Товар "${escapeHtml(p.name)}" заканчивается (осталось ${p.stock} шт). Необходимо заказать новую партию.`
+      );
+      alert(messages.join('\n'));
+    }
+  } catch (e) {
+    console.error('Ошибка при проверке остатков:', e);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  checkLowStock();
 });

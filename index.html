@@ -175,7 +175,7 @@
                                 <h1 class="text-2xl font-semibold">Заявки</h1>
                                 <p class="text-gray-500">Управление заявками и запросами</p>
                             </div>
-                            <button id="create-request-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2">
+                            <button id="create-order-btn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center gap-2">
                                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                 </svg>
@@ -202,7 +202,7 @@
                             </div>
                         </div>
 
-                        <div id="requests-list" class="space-y-4"></div>
+                        <div id="orders-list" class="space-y-4"></div>
                     </div>
                 </div>
 
@@ -470,46 +470,54 @@
     </div>
 
     <!-- Create Request Modal -->
-    <div id="create-request-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
-        <div class="bg-white rounded-lg max-w-md w-full mx-4">
-            <div class="p-6 border-b border-gray-200">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-semibold">Новая заявка</h3>
-                    <button id="close-modal-btn" class="p-1 hover:bg-gray-100 rounded">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
-                </div>
-            </div>
-            <div class="p-6 space-y-4">
-                <div>
-                    <label class="block text-sm font-medium mb-1">Название заявки</label>
-                    <input id="request-title" type="text" placeholder="Введите название заявки" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Описание</label>
-                    <textarea id="request-description" placeholder="Подробное описание заявки" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Приоритет</label>
-                    <select id="request-priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <option value="low">Низкий</option>
-                        <option value="medium" selected>Средний</option>
-                        <option value="high">Высокий</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 pt-4">
-                    <button id="submit-request-btn" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
-                        Создать заявку
-                    </button>
-                    <button id="cancel-request-btn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
-                        Отмена
-                    </button>
-                </div>
-            </div>
-        </div>
+<div id="create-order-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg max-w-md w-full mx-4">
+    <div class="p-6 border-b border-gray-200">
+      <div class="flex items-center justify-between">
+        <h3 class="text-lg font-semibold">Новый заказ</h3>
+        <button id="close-modal-btn" class="p-1 hover:bg-gray-100 rounded">
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
     </div>
+    <div class="p-6 space-y-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">Название заказа</label>
+        <input id="order-title" type="text" placeholder="Введите название" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Описание</label>
+        <textarea id="order-description" placeholder="Подробное описание" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">Приоритет</label>
+        <select id="order-priority" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+          <option value="1">Низкий</option>
+          <option value="2" selected>Средний</option>
+          <option value="3">Высокий</option>
+        </select>
+      </div>
+      <div>
+        <input type="number" id="order-count" class="px-3 py-2 border border-gray-300 rounded w-full" placeholder="Количество товара">
+        <label class="block text-sm font-medium mb-1">Комментарий</label>
+        <textarea id="order-comment" placeholder="Дополнительный комментарий" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+      </div>
+
+      <div class="flex gap-2 pt-4">
+        <button id="submit-order-btn" class="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+          Создать заказ
+        </button>
+        <button id="cancel-order-btn" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+          Отмена
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <!-- Auth Modal -->
 <div id="auth-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center z-50">
   <div class="bg-white rounded-lg max-w-md w-full mx-4">
