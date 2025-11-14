@@ -12,7 +12,6 @@ try {
     $pdo = new PDO("sqlite:../db/catalog1.sqlite");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Простая валидация
     $required = ['name','category','price','discount','stock','delivery','image'];
     foreach ($required as $key) {
         if (!isset($_POST[$key])) {

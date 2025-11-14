@@ -5,7 +5,7 @@ try {
     $pdo = new PDO("sqlite:../db/catalog1.sqlite");
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    // Параметры фильтрации из query
+    
     $category = isset($_GET['category']) ? trim($_GET['category']) : null;
     $search   = isset($_GET['search']) ? trim($_GET['search']) : null;
 
