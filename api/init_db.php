@@ -19,4 +19,4 @@ $pdo->exec("INSERT INTO products (name, category, price, discount, stock, delive
 ('Монитор Dell 24\" FHD', 'Электроника', 13500, 10, 12, '3–7 дней', 'images/dell-monitor.jpg'),
 ('Принтер HP LaserJet Pro M404dn', 'Офис', 23000, 5, 5, '3–7 дней', 'images/hp-printer.jpg')");
 
-echo "✅ База данных пересоздана и заполнена!";
+echo "База данных пересоздана и заполнена!";

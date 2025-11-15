@@ -6,7 +6,7 @@ try {
     $pdo->exec("INSERT INTO warker (id, login, password, telefon, email) 
                 VALUES (1, 'kotak', '123456', '375338896568', 'dfdf@gmail.com')");
 
-    echo "✅ Работник добавлен!";
+    echo "Работник добавлен!";
 } catch (PDOException $e) {
     echo "Ошибка: " . $e->getMessage();
 }
