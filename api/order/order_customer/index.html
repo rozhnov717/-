@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест заказов клиентов</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input, textarea, select, button { margin: 5px 0; display: block; }
+    pre { background: #f0f0f0; padding: 10px; white-space: pre-wrap; }
+    .section { margin-bottom: 30px; }
+  </style>
+</head>
+<body>
+  <h1>order_customer API</h1>
+
+  <div class="section">
+    <h2>Добавить заказ</h2>
+    <form id="addForm">
+      <input type="number" name="id_goods" placeholder="ID товара" required>
+      <input type="number" name="count_goods" placeholder="Количество" required>
+      <textarea name="comment" placeholder="Комментарий"></textarea>
+      <button type="submit">Добавить</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>Удалить заказ</h2>
+    <form id="deleteForm">
+      <input type="number" name="id" placeholder="ID заказа" required>
+      <button type="submit">Удалить</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>Обновить статус</h2>
+    <form id="updateForm">
+      <input type="number" name="id" placeholder="ID заказа" required>
+      <label for="status">Статус</label>
+      <select name="status" id="status">
+        <option value="0">Новый</option>
+        <option value="1">В обработке</option>
+        <option value="2">Завершён</option>
+        <option value="3">Отменён</option>
+      </select>
+      <button type="submit">Обновить</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h2>Список заказов</h2>
+    <button id="refreshBtn">Обновить список</button>
+    <pre id="listOutput">Загрузка...</pre>
+  </div>
+
+  <div class="section">
+    <h2>Ответ сервера</h2>
+    <pre id="output"></pre>
+  </div>
+
+<script>
+function showResult(data) {
+  document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+}
+
+function disableForm(form) {
+  [...form.elements].forEach(el => el.disabled = true);
+}
+function enableForm(form) {
+  [...form.elements].forEach(el => el.disabled = false);
+}
+
+async function fetchList() {
+  try {
+    const res = await fetch('get.php');
+    const data = await res.json();
+    document.getElementById('listOutput').textContent = JSON.stringify(data.items, null, 2);
+  } catch (err) {
+    document.getElementById('listOutput').textContent = 'Ошибка загрузки: ' + err;
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', fetchList);
+
+// Добавить
+document.getElementById('addForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  disableForm(e.target);
+  const formData = new FormData(e.target);
+  try {
+    const res = await fetch('add.php', { method: 'POST', body: formData });
+    const data = await res.json();
+    showResult(data);
+    fetchList();
+  } catch (err) {
+    showResult({ success: false, error: err.message });
+  } finally {
+    enableForm(e.target);
+  }
+});
+
+// Удалить
+document.getElementById('deleteForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  disableForm(e.target);
+  const id = e.target.id.value;
+  try {
+    const res = await fetch('delete.php?id=' + encodeURIComponent(id));
+    const data = await res.json();
+    showResult(data);
+    fetchList();
+  } catch (err) {
+    showResult({ success: false, error: err.message });
+  } finally {
+    enableForm(e.target);
+  }
+});
+
+// Обновить статус
+document.getElementById('updateForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  disableForm(e.target);
+  const id = e.target.id.value;
+  const status = e.target.status.value;
+  try {
+    const res = await fetch('update_status.php?id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status));
+    const data = await res.json();
+    showResult(data);
+    fetchList();
+  } catch (err) {
+    showResult({ success: false, error: err.message });
+  } finally {
+    enableForm(e.target);
+  }
+});
+
+// Автозагрузка при старте
+fetchList();
+</script>
+</body>
+</html>

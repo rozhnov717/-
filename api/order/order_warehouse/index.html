@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Warehouse Test</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input, textarea, select, button { margin: 5px 0; display: block; }
+    pre { background: #f0f0f0; padding: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Проверка order_warehouse API</h1>
+
+  <!-- Добавление -->
+  <h2>Добавить заказ</h2>
+  <form id="addForm">
+    <input type="text" name="title" placeholder="Название" required>
+    <textarea name="description" placeholder="Описание"></textarea>
+    <select name="priority">
+      <option value="1">Высокий</option>
+      <option value="2" selected>Средний</option>
+      <option value="3">Низкий</option>
+    </select>
+    <input type="number" name="count_goods" placeholder="Количество" required>
+    <label><input type="checkbox" name="have_goods_in_catalog" value="1"> Есть в каталоге</label>
+    <button type="submit">Добавить</button>
+  </form>
+
+  <!-- Удаление -->
+  <h2>Удалить заказ</h2>
+  <form id="deleteForm">
+    <input type="number" name="id" placeholder="ID заказа" required>
+    <button type="submit">Удалить</button>
+  </form>
+
+  <!-- Получение -->
+  <h2>Получить заказы</h2>
+  <form id="getForm">
+    <input type="number" name="id" placeholder="ID (опционально)">
+    <button type="submit">Получить</button>
+  </form>
+
+  <!-- Обновление статуса -->
+  <h2>Обновить статус</h2>
+  <form id="updateForm">
+    <input type="number" name="id" placeholder="ID заказа" required>
+    <select name="status">
+      <option value="0">Новый</option>
+      <option value="1">В работе</option>
+      <option value="2">Завершён</option>
+      <option value="3">Отменён</option>
+    </select>
+    <button type="submit">Обновить</button>
+  </form>
+
+  <h2>Ответ сервера</h2>
+  <pre id="output"></pre>
+
+<script>
+function showResult(data) {
+  document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+}
+
+// Добавить
+document.getElementById('addForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const res = await fetch('add.php', { method: 'POST', body: formData });
+  showResult(await res.json());
+});
+
+// Удалить
+document.getElementById('deleteForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = e.target.id.value;
+  const res = await fetch('delete.php?id=' + encodeURIComponent(id));
+  showResult(await res.json());
+});
+
+// Получить
+document.getElementById('getForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = e.target.id.value;
+  const url = id ? 'get.php?id=' + encodeURIComponent(id) : 'get.php';
+  const res = await fetch(url);
+  showResult(await res.json());
+});
+
+// Обновить статус
+document.getElementById('updateForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const id = e.target.id.value;
+  const status = e.target.status.value;
+  const res = await fetch('update_status.php?id=' + encodeURIComponent(id) + '&status=' + encodeURIComponent(status));
+  showResult(await res.json());
+});
+</script>
+</body>
+</html>
